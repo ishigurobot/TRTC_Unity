@@ -1,0 +1,11 @@
+{
+  "name": "com.tencent.trtc-unity",
+  "version": "1.0.0",
+  "displayName": "TRTC Unity",
+  "description": "TRTC Unity UPM package",
+  "unity": "2021.3",
+  "author": {
+    "name": "Your Name",
+    "url": "https://github.com/yourname"
+  }
+}

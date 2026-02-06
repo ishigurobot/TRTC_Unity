@@ -7,6 +7,7 @@ using UnityEditor.Callbacks;
 using UnityEngine;
 using UnityEditor.iOS.Xcode;
 using UnityEditor.iOS.Xcode.Extensions;
+using System.Runtime.CompilerServices;
 
 namespace TRTCSDK.Editor {
   public class IOSAddDylib : MonoBehaviour {
@@ -21,6 +22,8 @@ namespace TRTCSDK.Editor {
       return result;
     }
 
+    public static string CallerFilePath([CallerFilePath] string self = "") => self;
+
     [PostProcessBuild(1002)]
     public static void OnPostprocessBuild(BuildTarget buildTarget, string buildPath) {
       if (buildTarget != BuildTarget.iOS) {
@@ -29,11 +32,13 @@ namespace TRTCSDK.Editor {
 
       // Point to the 'Assets' path
       var dataPath = Application.dataPath;
+      var scriptPath = CallerFilePath();
+      var xcFrameworksPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(scriptPath), "../SDK/Plugins/iOS/XCFrameworks~/"));
 
       Debug.Log("IOSAddDylib OnPostprocessBuild buildPath:" + buildPath);
       Debug.Log("IOSAddDylib OnPostprocessBuild dataPath:" + dataPath);
-
-      var xcFrameworksPath = dataPath + "/TRTCSDK/SDK/Plugins/iOS/XCFrameworks~/";
+      Debug.Log("IOSAddDylib OnPostprocessBuild scriptPath:" + scriptPath);
+      Debug.Log("IOSAddDylib OnPostprocessBuild xcFrameworksPath:" + xcFrameworksPath);
 
       var absPath = "Frameworks/TRTCSDK/SDK/Plugins/iOS/";
       var destPath = buildPath + "/" + absPath;
@@ -57,8 +62,16 @@ namespace TRTCSDK.Editor {
           Directory.GetDirectories(xcFrameworksPath).Length > 0) {
         sdkNames = GetDirectoryNames(xcFrameworksPath, "xcframework");
         {
-          foreach (var name in sdkNames) {
-            FileUtil.CopyFileOrDirectory(xcFrameworksPath + name, destPath + name);
+          foreach (var name in sdkNames)
+          {
+            var dstName = destPath + name;
+            if (File.Exists(dstName) || Directory.Exists(dstName))
+            {
+              FileUtil.DeleteFileOrDirectory(dstName);
+            }
+
+            FileUtil.CopyFileOrDirectory(xcFrameworksPath + name, dstName);
+
           }
         }
       } else {
